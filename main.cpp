@@ -1,20 +1,29 @@
 #include <string>
-#include <vector>
+#include <set>
 #include <iostream>
 #include <fstream>
 #include <cctype>
 #include <regex>
 #include <algorithm>
 #include <sstream>
-#include <unordered_map>
-#include <filesystem> // Added this library for file operations
+#include <map>
+#include <iomanip>
+#include <filesystem>
 
-std::string toLowerCase(const std::string &str) {
+std::string toLowerCase(const std::string &str) // convert string to lowercase
+{
     std::string lowercased = str;
     std::transform(lowercased.begin(), lowercased.end(), lowercased.begin(),
                    [](unsigned char c) { return std::tolower(c); });
     return lowercased;
 }
+
+bool containsNumber(const std::string &str) // check if string contains a number
+{
+    return std::any_of(str.begin(), str.end(), ::isdigit);
+}
+
+
 
 int main()
 {
@@ -41,53 +50,82 @@ int main()
     } while (!in_file);
 
     std::string line;
-    std::unordered_map<std::string, int> word_counter;
-    std::vector<std::string> urls;
-    std::regex url_pattern(R"((http|https)://[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+)");
+    std::map<std::string, std::pair<int, std::vector<int>>> word_counter; // map of words and their count and line numbers, using map to sort the words alphabetically
+    std::set<std::string> urls;
+    std::regex url_pattern(R"(((http|https)://|www\.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]*)"); // regex for urls
+    int line_number = 1;
+    int word_count = 0;
 
-    while(getline(in_file, line))
+    while(getline(in_file, line)) // read file line by line
     {
-        std::smatch match;
-        while (std::regex_search (line, match, url_pattern)) {
-            urls.push_back(match.str());
+        std::smatch match; // regex match
+        while (std::regex_search (line, match, url_pattern)) // find all urls in the line
+        {
+            urls.insert(match.str());
             line = match.prefix().str() + " " + match.suffix().str();
         }
 
         std::istringstream iss(line);
         std::string word;
-        while (iss >> word)
+        while (iss >> word) // read line word by word
         {
             word.erase(word.begin(), std::find_if(word.begin(), word.end(), [](unsigned char c){ return !std::ispunct(c); }));
             word.erase(std::find_if(word.rbegin(), word.rend(), [](unsigned char c){ return !std::ispunct(c); }).base(), word.end());
 
             word = toLowerCase(word);
 
-            if(word.empty())
+            if(word.empty() || containsNumber(word)) // skip empty words and words with numbers
             {
                 continue;
             }
 
-            word_counter[word]++;
+            word_counter[word].first++; // increment word count
+            word_counter[word].second.push_back(line_number); // add line number to the map
         }
+        line_number++;
     }
     in_file.close();
 
     std::ofstream out_file;
     out_file.open("rezultatai.txt");
-    
-    for(const auto& url: urls)
-    {
-        out_file << url << std::endl;
-    }
 
+    out_file << "LINKS (" << urls.size() << ")\n";
+    for(const auto& url: urls) // print urls to file, remove the last character if it's a dot
+    {
+        std::string fixed_url = url;
+        if (!fixed_url.empty() && fixed_url.back() == '.') 
+        {
+            fixed_url.pop_back(); // remove the last character
+        }
+        out_file << fixed_url << "\n";
+    }
+    out_file << "\n";
+
+
+    out_file << std::left << "WORD COUNTER\n";
+    out_file << std::setw(20) << "Word" << " | " << std::setw(5) << "Count" << " | " << "Found in rows\n";
+    out_file << "--------------------------------------------------------------\n";
     for(const auto& pair: word_counter)
     {
-        if(pair.second > 1)
+        if(pair.second.first > 1)
         {
-            out_file << pair.first << " " << pair.second << std::endl;
+            word_count++;
+            out_file << std::setw(20) << pair.first << " | " << std::setw(5) << pair.second.first << " | ";
+            int lineCounter = 0;
+            for(auto lineNum : pair.second.second)
+            {
+                if(lineCounter != 0 && lineCounter % 10 == 0) // 10 lines numbers per line
+                    out_file << "\n" << std::setw(28) << " "; // 28: 20 (word column width) + 3 (inter-column space) + 5 (count column width)
+                out_file << lineNum << " ";
+                lineCounter++;
+            }
+            out_file << "\n--------------------------------------------------------------\n";
         }
     }
-    out_file.close();
 
+    out_file.close();
+    std::cout << "Number of links: " << urls.size() << std::endl;
+    std::cout << "Number of unique words (count >= 2): " << word_count << std::endl;
+    std::cout << "Check rezultatai.txt for results\n" << std::endl;
     return 0;
 }
