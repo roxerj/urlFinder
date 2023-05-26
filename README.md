@@ -1,22 +1,22 @@
-#URL FINDER
+# URL FINDER
 
 A program that extracts all URLs from a given text, that start with "https://", "http://" and "www.", and all words that appear in text 2 or more times.
 Result: txt file with extracted URLs and a cross-table that contains all words that appear more than 1 time, their count and rows, in which the words are found.
 
-#USING THE PROGRAM
+## USING THE PROGRAM
 
 1) Find the text that you want to test, put it into a txt file and place the file in the program's directory
 2) Simply enter "make" into your console when in program directory. Make sure you have MAKE tools installed
 3) Enter the txt file's name
 4) The results will be output to "rezultatai.txt" file
 
-#EXAMPLE
+## EXAMPLE
 
 OpenAI is a distinguished artificial intelligence research lab. They have made significant strides in the development of AI technologies, including the impressive GPT language models. The main mission of OpenAI is to ensure that artificial general intelligence (AGI) is used to the benefit of all of humanity, while always maintaining a strong focus on safety and cooperation in AI development.
 
 For an in-depth understanding of OpenAI's mission, projects, and their latest advancements in AI, visit their official website at https://www.openai.com. To dive into the specifics of their ongoing research and breakthroughs, explore their research page at https://openai.com/research. OpenAI continues to push the boundaries of what's possible in AI, fostering a future where AGI contributes positively to society.
 
-#RESULTS WITH GIVEN EXAMPLE
+## RESULTS WITH GIVEN EXAMPLE
 
 LINKS (2)
 https://openai.com/research
